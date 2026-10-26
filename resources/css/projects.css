@@ -1,0 +1,21 @@
+
+.projects-page {
+    max-width: 1100px;
+}
+
+/* Slide card */
+.slide img {
+    max-height: 320px;
+    object-fit: cover;
+    width: 100%;
+}
+
+/* Small devices: stack image below text */
+@media (max-width: 767px) {
+    .slide .row {
+        flex-direction: column-reverse;
+    }
+    .slide img {
+        max-height: 260px;
+    }
+}

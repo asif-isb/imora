@@ -1,35 +1,58 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { Carousel } from "bootstrap";
 
 export default function CarouselComponent({ slides = [] }) {
+    const carouselRef = useRef(null);
+
+    useEffect(() => {
+        if (!carouselRef.current || slides.length < 2) return;
+
+        const carousel = new Carousel(carouselRef.current, {
+            ride: "carousel",
+            interval: 4000, // milliseconds between slides
+            pause: false,   // keep scrolling on mouse hover; use "hover" to pause
+            wrap: true,
+        });
+
+        return () => carousel.dispose();
+    }, [slides.length]);
+
     return (
-        <div id="carouselExample" className="carousel slide" data-bs-ride="carousel">
+        <div
+            ref={carouselRef}
+            id="carouselExample"
+            className="carousel slide"
+            data-bs-ride="carousel"
+            data-bs-interval="4000"
+            data-bs-pause="false"
+        >
             <div className="carousel-inner">
                 {slides.length > 0 ? (
                     slides.map((slide, index) => (
                         <div key={slide.id} className={`carousel-item ${index === 0 ? "active" : ""}`}>
                             <div className="position-relative">
-                                {/* Dimmed background image */}
+                                {/* Background image */}
                                 <img
                                     src={slide.image}
                                     className="d-block w-100 carousel-image"
                                     alt={slide.title}
                                 />
 
-                                {/* Transparent overlay */}
+                                {/* Gradient overlay (dark on the left where the text sits) */}
                                 <div className="carousel-overlay position-absolute top-0 start-0 w-100 h-100"></div>
 
                                 {/* Slide Text Content */}
-                                <div className="carousel-caption text-start position-absolute p-3 custom-caption">
-                                    <h2 className="carousel-title fw-bold text-warning mb-2">
+                                <div className="carousel-caption text-start position-absolute custom-caption">
+                                    <h2 className="carousel-title text-uppercase fw-bold">
                                         {slide.title}
                                     </h2>
-                                    <p className="carousel-description d-none d-md-block text-light fs-5 mb-2">
+                                    <p className="carousel-description d-none d-md-block">
                                         {slide.description}
                                     </p>
                                     {slide.button_text && (
                                         <a
                                             href={slide.button_link}
-                                            className="btn btn-warning fw-bold btn-custom"
+                                            className="btn fw-bold btn-custom"
                                         >
                                             {slide.button_text}
                                         </a>
@@ -54,48 +77,106 @@ export default function CarouselComponent({ slides = [] }) {
             {/* Inline Styles */}
             <style>{`
                 .carousel-image {
-                    filter: brightness(0.8);
+                    filter: brightness(0.85);
                 }
 
                 .carousel-overlay {
-                    background: rgba(0, 0, 0, 0.1);
+                    background: linear-gradient(
+                        90deg,
+                        rgba(0, 0, 0, 0.65) 0%,
+                        rgba(0, 0, 0, 0.3) 50%,
+                        rgba(0, 0, 0, 0) 100%
+                    );
                     z-index: 1;
                 }
 
-                .carousel-title {
-                    font-size: 2rem;
-                    letter-spacing: 0.03em;
-                    text-shadow: 2px 2px 6px rgba(0, 0, 0, 1);
-                }
-
-                .carousel-description {
-                    font-size: 1.25rem;
-                    max-width: 600px;
-                }
-
-                .custom-caption {
-                    top: 20%; /* Move higher */
-                    transform: translateY(0); /* No vertical offset */
+                /* Caption position: vertically centered, left aligned */
+                .carousel-caption.custom-caption {
+                    top: 50%;
+                    bottom: auto;
+                    transform: translateY(-50%);
+                    left: 8%;
+                    right: 8%;
+                    max-width: 620px;
+                    padding: 0;
                     z-index: 2;
                 }
 
-                .btn-custom {
-                    padding: 0.25rem 0.75rem;
-                    font-size: 0.85rem;
+                /* Title: white with a gold accent bar underneath */
+                .carousel-title {
+                    font-size: 2.75rem;
+                    line-height: 1.15;
+                    letter-spacing: 0.04em;
+                    color: #ffffff;
+                    margin: 0 0 1rem 0;
+                    padding-bottom: 0.75rem;
+                    position: relative;
+                    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
                 }
 
-                @media (max-width: 768px) {
-                    .carousel-title {
-                        font-size: 1.25rem;
+                .carousel-title::after {
+                    content: "";
+                    position: absolute;
+                    left: 0;
+                    bottom: 0;
+                    width: 70px;
+                    height: 4px;
+                    border-radius: 2px;
+                    background-color: #c29522;
+                }
+
+                /* Description */
+                .carousel-description {
+                    font-size: 1.15rem;
+                    line-height: 1.6;
+                    color: #f1f1f1;
+                    max-width: 520px;
+                    margin: 0 0 1.5rem 0;
+                    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+                }
+
+                /* Button: brand gold, hover brown */
+                .btn-custom {
+                    background-color: #c29522;
+                    border: 2px solid #c29522;
+                    color: #ffffff;
+                    padding: 0.6rem 1.75rem;
+                    font-size: 0.95rem;
+                    letter-spacing: 0.05em;
+                    text-transform: uppercase;
+                    border-radius: 50px;
+                    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+                }
+
+                .btn-custom:hover,
+                .btn-custom:focus {
+                    background-color: #9b5d24;
+                    border-color: #9b5d24;
+                    color: #ffffff;
+                    transform: translateY(-2px);
+                }
+
+                /* Mobile */
+                @media (max-width: 767.98px) {
+                    .carousel-caption.custom-caption {
+                        left: 6%;
+                        right: 6%;
                     }
 
-                    .carousel-description {
-                        font-size: 0.9rem;
+                    .carousel-title {
+                        font-size: 1.15rem;
+                        margin-bottom: 0.6rem;
+                        padding-bottom: 0.5rem;
+                    }
+
+                    .carousel-title::after {
+                        width: 45px;
+                        height: 3px;
                     }
 
                     .btn-custom {
-                        font-size: 0.55rem;
-                        padding: 0.3rem 0.8rem;
+                        font-size: 0.7rem;
+                        padding: 0.4rem 1rem;
                     }
                 }
             `}</style>

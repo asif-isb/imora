@@ -13,12 +13,17 @@ import Swal from 'sweetalert2';
 import easypaisa from '@/images/easypaisa.png';
 import jazzcash from '@/images/jazzcash.png';
 
+// Flip to true later to bring these back
+const SHOW_EMAIL = false;
+const ENABLE_ONLINE_PAYMENTS = false;
+
 const CartItems = ({ onClose = () => {} }) => {
     const { items, total, dispatch } = useCart();
     const [showCheckout, setShowCheckout] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('cash');
     const [copiedText, setCopiedText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
 
     useEffect(() => {
         // Re-initialize totals when items change
@@ -46,58 +51,77 @@ const CartItems = ({ onClose = () => {} }) => {
     };
 
   const handleConfirm = async () => {
-    if (!items.length) {
-        toast.error("Your cart is empty.");
-        return;
-    }
+        if (!items.length) {
+            toast.error("Your cart is empty.");
+            return;
+        }
 
-    // Get product IDs
-    const productIds = items.map(item => item.id);
+        // Get product IDs
+        const productIds = items.map(item => item.id);
 
-    // Manually extract values from form
-    const form = document.querySelector('#checkout-form');
-    const name = form.querySelector('input[placeholder="Name *"]').value;
-    const phone = form.querySelector('input[placeholder="Phone Number *"]').value;
-    const email = form.querySelector('input[placeholder="Email *"]').value;
-    const address = form.querySelector('textarea[placeholder="Address *"]').value;
-    const transactionId = form.querySelector('input[placeholder="Enter transaction ID"]').value;
+        // Manually extract values from form
+        const form = document.querySelector('#checkout-form');
+        const name = form.querySelector('input[placeholder="Name *"]').value;
+        const phone = form.querySelector('input[placeholder="Phone Number *"]').value;
+        const email = form.querySelector('input[placeholder="Email *"]')?.value || '';
+        const address = form.querySelector('textarea[placeholder="Address *"]').value;
+        const transactionId = form.querySelector('input[placeholder="Enter transaction ID"]')?.value || '';
 
-    // ✅ Require payment method
-    if (!paymentMethod) {
-        toast.error("Please select a payment method.");
-        return; // stop submission
-    }
+        if (!paymentMethod) {
+            toast.error("Please select a payment method.");
+            return;
+        }
 
-    setIsProcessing(true);
+        setIsProcessing(true);
+        setFieldErrors({});
 
-    try {
-        const response = await axios.post('/orders', {
-            product_ids: productIds,
-            name,
-            phone,
-            email,
-            address,
-            payment_method: paymentMethod,
-            transaction_id: transactionId,
-        });
+        try {
+            const response = await axios.post('/orders', {
+                product_ids: productIds,
+                name,
+                phone,
+                email,
+                address,
+                payment_method: paymentMethod,
+                transaction_id: transactionId,
+            });
 
-        const orderNumber = response.data.order_number;
+            const orderNumber = response.data.order_number;
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Order Placed',
-            html: `Your order has been placed successfully.<br><strong>Order Number:</strong> ${orderNumber}`,
-        });
+            Swal.fire({
+                icon: 'success',
+                title: 'Order Placed',
+                html: `Your order has been placed successfully.<br><strong>Order Number:</strong> ${orderNumber}`,
+            });
 
-        dispatch({ type: "CLEAR_CART" });
-        setShowCheckout(false);
-    } catch (error) {
-        console.error("Order error:", error);
-        toast.error("Something went wrong while placing the order.");
-    } finally {
-        setIsProcessing(false);
-    }
-};
+            dispatch({ type: "CLEAR_CART" });
+            setShowCheckout(false);
+        } catch (error) {
+            console.error("Order error:", error);
+            const errors = error.response?.data?.errors;
+            if (errors) {
+                // Keep the first message per field
+                const mapped = {};
+                Object.entries(errors).forEach(([field, msgs]) => {
+                    mapped[field] = msgs[0];
+                });
+                setFieldErrors(mapped);
+
+                // Errors that don't belong to a visible input still go to a toast
+                const inputFields = ['name', 'phone', 'email', 'address', 'transaction_id'];
+                const others = Object.entries(mapped)
+                    .filter(([field]) => !inputFields.includes(field))
+                    .map(([, msg]) => msg);
+                if (others.length) toast.error(others.join(' '));
+            } else {
+                toast.error(
+                    error.response?.data?.message || "Something went wrong while placing the order."
+                );
+            }
+        } finally {
+            setIsProcessing(false);
+        }
+    };
 
 
 
@@ -286,106 +310,148 @@ const CartItems = ({ onClose = () => {} }) => {
                         </div>
                         <div className={styles.checkoutDrawerBody}>
                             <Form  id="checkout-form">
-                                <div className={styles.formRow}>
-                                    <Form.Group>
-                                        <Form.Control
-                                            type="text"
-                                            placeholder="Name *"
-                                            required
-                                        />
-                                    </Form.Group>
-
-                                    <Form.Group>
-                                        <Form.Control
-                                            type="tel"
-                                            placeholder="Phone Number *"
-                                            required
-                                        />
-                                    </Form.Group>
+                                {/* Row 1: Name + Contact number */}
+                                <div className="row g-2 mb-3">
+                                    <div className="col-6">
+                                        <Form.Group>
+                                            <Form.Control
+                                                type="text"
+                                                placeholder="Name *"
+                                                required
+                                                isInvalid={!!fieldErrors.name}
+                                                onChange={() => setFieldErrors((p) => ({ ...p, name: undefined }))}
+                                            />
+                                            <Form.Control.Feedback type="invalid">
+                                                {fieldErrors.name}
+                                            </Form.Control.Feedback>
+                                        </Form.Group>
+                                    </div>
+                                    <div className="col-6">
+                                        <Form.Group>
+                                            <Form.Control
+                                                type="tel"
+                                                inputMode="tel"
+                                                maxLength={16}
+                                                placeholder="Phone Number *"
+                                                required
+                                                isInvalid={!!fieldErrors.phone}
+                                                onChange={() => setFieldErrors((p) => ({ ...p, phone: undefined }))}
+                                            />
+                                            <Form.Control.Feedback type="invalid">
+                                                {fieldErrors.phone}
+                                            </Form.Control.Feedback>
+                                        </Form.Group>
+                                    </div>
                                 </div>
 
-                                <Form.Group className="mb-3">
-                                    <Form.Control
-                                        type="email"
-                                        placeholder="Email *"
-                                        required
-                                    />
-                                </Form.Group>
-
+                                {/* Row 2: Address */}
                                 <Form.Group className="mb-3">
                                     <Form.Control
                                         as="textarea"
                                         rows={2}
                                         placeholder="Address *"
                                         required
+                                        isInvalid={!!fieldErrors.address}
+                                        onChange={() => setFieldErrors((p) => ({ ...p, address: undefined }))}
                                     />
+                                    <Form.Control.Feedback type="invalid">
+                                        {fieldErrors.address}
+                                    </Form.Control.Feedback>
                                 </Form.Group>
 
-                                <h6 className="mb-2">Payment Methods<small className="text-muted ms-2"> (Click icon for details)</small></h6>
-
-
-                                <div className={styles.paymentMethods}>
-                                    <div
-                                        className={`${styles.paymentMethod} ${paymentMethod === 'easypaisa' ? styles.active : ''}`}
-                                        onClick={() => setPaymentMethod('easypaisa')}
-                                    >
-                                        <img src={easypaisa} alt="EasyPaisa" />
-                                    </div>
-                                    <div
-                                        className={`${styles.paymentMethod} ${paymentMethod === 'jazzcash' ? styles.active : ''}`}
-                                        onClick={() => setPaymentMethod('jazzcash')}
-                                    >
-                                        <img src={jazzcash} alt="JazzCash" />
-                                    </div>
-                                    <div
-                                        className={`${styles.paymentMethod} ${paymentMethod === 'bank' ? styles.active : ''}`}
-                                        onClick={() => setPaymentMethod('bank')}
-                                    >
-                                        <FontAwesomeIcon icon={faUniversity} />
-                                    </div>
-                                </div>
-
-                                {paymentMethod && (
-                                    <div className={styles.paymentDetails}>
-                                        {(paymentMethod === 'easypaisa' || paymentMethod === 'jazzcash') && (
-                                            <div className={styles.mobileNumber}>
-                                                <span>03057009093</span>
-                                                <div className={styles.copyWrapper}>
-                                                    <FontAwesomeIcon
-                                                        icon={faCopy}
-                                                        className={styles.copyIcon}
-                                                        onClick={() => handleCopy('03057009093')}
-                                                    />
-                                                    {copiedText === '03057009093' && (
-                                                        <span className={styles.copiedText}>Copied!</span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {paymentMethod === 'bank' && (
-                                            <div className={styles.bankDetails}>
-                                                <div className={styles.bankInfo}>
-                                                    <span>Faysal Bank IBAN: PK07FAYS3336301000004018</span>
-                                                    <div className={styles.copyWrapper}>
-                                                        <FontAwesomeIcon
-                                                            icon={faCopy}
-                                                            className={styles.copyIcon}
-                                                            onClick={() => handleCopy('PK07FAYS3336301000004018')}
-                                                        />
-                                                        {copiedText === 'PK07FAYS3336301000004018' && (
-                                                            <span className={styles.copiedText}>Copied!</span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
+                                {SHOW_EMAIL && (
+                                    <Form.Group className="mb-3">
+                                        <Form.Control
+                                            type="email"
+                                            placeholder="Email *"
+                                            required
+                                        />
+                                    </Form.Group>
                                 )}
 
-                                <p className="text-danger mb-3 small">
-                                    Pay your invoice and enter the transaction ID to complete your order.
-                                </p>
+                                <h6 className="mb-2">Payment Method</h6>
+
+                                <div className="form-check mb-3">
+                                    <input
+                                        className="form-check-input"
+                                        type="radio"
+                                        id="pay-cash"
+                                        checked
+                                        readOnly
+                                    />
+                                    <label className="form-check-label" htmlFor="pay-cash">
+                                        Cash on Delivery
+                                    </label>
+                                </div>
+
+                                {ENABLE_ONLINE_PAYMENTS && (
+                                    <>
+                                        <h6 className="mb-2">Payment Methods<small className="text-muted ms-2"> (Click icon for details)</small></h6>
+
+                                        <div className={styles.paymentMethods}>
+                                            <div
+                                                className={`${styles.paymentMethod} ${paymentMethod === 'easypaisa' ? styles.active : ''}`}
+                                                onClick={() => setPaymentMethod('easypaisa')}
+                                            >
+                                                <img src={easypaisa} alt="EasyPaisa" />
+                                            </div>
+                                            <div
+                                                className={`${styles.paymentMethod} ${paymentMethod === 'jazzcash' ? styles.active : ''}`}
+                                                onClick={() => setPaymentMethod('jazzcash')}
+                                            >
+                                                <img src={jazzcash} alt="JazzCash" />
+                                            </div>
+                                            <div
+                                                className={`${styles.paymentMethod} ${paymentMethod === 'bank' ? styles.active : ''}`}
+                                                onClick={() => setPaymentMethod('bank')}
+                                            >
+                                                <FontAwesomeIcon icon={faUniversity} />
+                                            </div>
+                                        </div>
+
+                                        {paymentMethod && (
+                                            <div className={styles.paymentDetails}>
+                                                {(paymentMethod === 'easypaisa' || paymentMethod === 'jazzcash') && (
+                                                    <div className={styles.mobileNumber}>
+                                                        <span>03057009093</span>
+                                                        <div className={styles.copyWrapper}>
+                                                            <FontAwesomeIcon
+                                                                icon={faCopy}
+                                                                className={styles.copyIcon}
+                                                                onClick={() => handleCopy('03057009093')}
+                                                            />
+                                                            {copiedText === '03057009093' && (
+                                                                <span className={styles.copiedText}>Copied!</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {paymentMethod === 'bank' && (
+                                                    <div className={styles.bankDetails}>
+                                                        <div className={styles.bankInfo}>
+                                                            <span>Faysal Bank IBAN: PK07FAYS3336301000004018</span>
+                                                            <div className={styles.copyWrapper}>
+                                                                <FontAwesomeIcon
+                                                                    icon={faCopy}
+                                                                    className={styles.copyIcon}
+                                                                    onClick={() => handleCopy('PK07FAYS3336301000004018')}
+                                                                />
+                                                                {copiedText === 'PK07FAYS3336301000004018' && (
+                                                                    <span className={styles.copiedText}>Copied!</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <p className="text-danger mb-3 small">
+                                            Pay your invoice and enter the transaction ID to complete your order.
+                                        </p>
+                                    </>
+                                )}
 
                                 <div className={`${styles.totalAmount} mb-3`}>
                                     <p className="mb-0 text-muted">Total Amount Payable:
@@ -393,15 +459,16 @@ const CartItems = ({ onClose = () => {} }) => {
                                     </p>
                                 </div>
 
-                                <Form.Group className="mb-3">
-                                    <Form.Label className={styles.requiredLabel}>Transaction ID</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        placeholder="Enter transaction ID"
-                                        required
-                                    />
-                                </Form.Group>
-
+                                {ENABLE_ONLINE_PAYMENTS && (
+                                    <Form.Group className="mb-3">
+                                        <Form.Label className={styles.requiredLabel}>Transaction ID</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            placeholder="Enter transaction ID"
+                                            required
+                                        />
+                                    </Form.Group>
+                                )}
                                 <div className="d-flex gap-2">
                                     <Button
                                         variant="outline-secondary"

@@ -18,20 +18,20 @@ class OwnerNewOrderNotification extends Mailable
         $this->orderNumber = $orderNumber;
         $this->orders = $orders;
 
-        // Calculate the total amount from associated product prices
+        // Total uses the discounted price (Product::final_price)
         $this->total = collect($orders)->sum(function ($order) {
-            return $order->product->price; // Make sure 'product' relationship is loaded
+            return $order->product->final_price; // Make sure 'product' relationship is loaded
         });
     }
 
     public function build()
     {
-        return $this->subject('New Order Received – EdenicFlora')
-                    ->markdown('emails.owner.order')
+        return $this->subject('New Order Received – IMORA')
+                    ->view('emails.owner.order') // was ->markdown(...)
                     ->with([
                         'orderNumber' => $this->orderNumber,
                         'orders' => $this->orders,
-                        'total' => $this->total, // ✅ Pass total to view
+                        'total' => $this->total,
                     ]);
     }
 }

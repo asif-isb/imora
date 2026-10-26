@@ -129,6 +129,14 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // Block deletion if any order references this product
+        if (\DB::table('orders')->where('product_id', $product->id)->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This product has existing orders and cannot be deleted.',
+            ], 409);
+        }
+
         // Delete image file from 'products' disk if it exists
         if ($product->image && Storage::disk('products')->exists($product->getRawOriginal('image'))) {
             Storage::disk('products')->delete($product->getRawOriginal('image'));

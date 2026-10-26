@@ -10,7 +10,7 @@ export default function Slider({ slides }) {
     const flash = props?.flash || {};
     const [editingSlide, setEditingSlide] = useState(null);
 
-    const { data, setData, post, put, delete: destroy, reset, processing, errors } = useForm({
+    const { data, setData, post, transform, delete: destroy, reset, processing, errors } = useForm({        
         title: "",
         description: "",
         button_text: "",
@@ -82,7 +82,10 @@ export default function Slider({ slides }) {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (editingSlide) {
-            put(route("slider.update", editingSlide.id), {
+            // POST + _method spoofing so the file is parsed by PHP
+            transform((formData) => ({ ...formData, _method: "put" }));
+            post(route("slider.update", editingSlide.id), {
+                forceFormData: true,
                 onSuccess: () => {
                     reset();
                     setPreview(null);
@@ -90,10 +93,12 @@ export default function Slider({ slides }) {
                     setEditingSlide(null);
                 },
                 onError: (errors) => console.log("Update error:", errors),
-
             });
         } else {
+            // clear the transform so store doesn't send _method
+            transform((formData) => formData);
             post(route("slider.store"), {
+                forceFormData: true,
                 onSuccess: () => {
                     reset();
                     setPreview(null);

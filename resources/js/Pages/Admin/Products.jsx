@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Dashboard from "../Dashboard";
 import axios from "axios";
 import { Editor } from "@tinymce/tinymce-react";
+import Swal from "sweetalert2";
 
 // Simple 5-star rating component
 function StarRating({ value, onChange }) {
@@ -163,11 +164,28 @@ export default function Products() {
         handleCloseForm();
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm("Are you sure?")) {
-            await axios.delete(`/admin/api/products/${id}`);
-            fetchAll();
-        }
+    const handleDelete = (id) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel",
+            reverseButtons: true,
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await axios.delete(`/admin/api/products/${id}`);
+                    fetchAll();
+                    Swal.fire("Deleted!", "Your product has been deleted.", "success");
+                } catch (error) {
+                    Swal.fire("Error!", "Failed to delete the product.", "error");
+                }
+            }
+        });
     };
 
     return (

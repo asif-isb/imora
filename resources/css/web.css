@@ -5,9 +5,7 @@
 .custom-topbar {
     height: 40px;
 }
-.navbar.custom-topbar {
-    background-color: #6aa508 !important; /* Use !important if needed */
-  }
+
 
 .navbar.custom-topbar .navbar-brand,
     .navbar.custom-topbar .nav-link {
@@ -33,7 +31,6 @@
 
 .header {
     height: 110px;
-    background-color: #80c52f   ;
     padding: 15px 0;
 }
 
@@ -302,3 +299,97 @@
 }
 
 
+/* IMORA Styling */
+
+/* ===== Theme (logo gold + base color) ===== */
+:root {
+    /* Palette A: Navy & Gold (active) */
+    --c-dark: #07162B;
+    --c-header: #1B1919;
+    --c-nav: #12315C;
+    --c-accent: #D4A937;
+    --c-accent-light: #F0C75E;
+    --c-ivory: #F8F4E8;
+
+    /* Palette B: Emerald & Gold (replace the three lines above to use)
+       --c-dark: #082E22; --c-header: #0F3D2E; --c-nav: #176247;
+       Palette C: Burgundy & Gold
+       --c-dark: #3A0912; --c-header: #5A0F1E; --c-nav: #7A1B2E; */
+}
+
+.navbar.custom-topbar .nav-link:not(:last-child)::after {
+    background-color: var(--c-accent);
+    opacity: .5;
+}
+
+.header {
+    background-color: var(--c-header);
+}
+
+.header-contact {
+    color: var(--c-ivory);
+}
+
+.searchBtn {
+    background-color: var(--c-accent);
+    color: #111;
+    border-color: var(--c-accent);
+}
+
+.mainNavigation {
+    background-color: var(--c-nav);
+    border-bottom: 3px solid var(--c-accent);
+}
+
+.mainNavigation .nav-link {
+    color: var(--c-ivory);
+}
+
+.mainNavigation .nav-link:hover,
+.mainNavigation .nav-link.active,
+.mainNavigation .nav-link.show {
+    color: var(--c-accent-light);
+}
+
+.footer {
+    background-color: var(--c-dark);
+    border-top: 3px solid var(--c-accent);
+}
+
+.footer p {
+    color: var(--c-ivory);
+}
+
+.catHeader {
+    border-bottom: 1px solid var(--c-accent);
+}
+
+.countDown {
+    background-color: var(--c-accent);
+}
+
+.countDown span {
+    color: #111;
+}
+
+.cart-badge {
+    background-color: var(--c-accent);
+    color: #111;
+}
+
+.custom-carousel-btn:hover {
+    background-color: var(--c-accent) !important;
+}
+
+.mobile-menu-link:hover,
+.mobile-menu-link:active {
+    background-color: #9b5d24;
+}
+@media (max-width: 767.98px) {
+    .header {
+        height: auto !important;
+        min-height: 0 !important;
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+    }
+}

@@ -27,7 +27,7 @@ class Product extends Model
 
     public function getFinalPriceAttribute()
     {
-        return $this->price - $this->discount;
+        return $this->price - ($this->price * $this->discount) / 100;
     }
 
     public function getIsNewAttribute()

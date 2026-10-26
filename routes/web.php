@@ -135,7 +135,17 @@ Route::get('/admin/api/tags', function () {
     return Tag::all();
 });
 Route::get('/api/deals/latest', [App\Http\Controllers\ProductController::class, 'latestDeals']);
-Route::get('/products', [App\Http\Controllers\ProductController::class, 'products']);
+//Route::get('/products', [App\Http\Controllers\ProductController::class, 'products']);
+Route::get('/getproducts', [App\Http\Controllers\ProductController::class, 'products']);
+
+Route::get('/projects', function () {
+    return Inertia::render('ProjectsPage');
+});
+
+Route::get('/products-list', function () {
+    return Inertia::render('AllProductsPage');
+});
+
 Route::get('/menus-json', function () {
     return Menu::with('children')->whereNull('parent_id')->orderBy('order')->get();
 });

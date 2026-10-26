@@ -12,6 +12,7 @@ export default defineConfig({
                 'resources/js/app.jsx',
             ],
             refresh: true,
+            detectTls: 'imora-dev.test',
         }),
         react(),
     ],

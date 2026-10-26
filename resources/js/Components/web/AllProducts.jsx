@@ -9,12 +9,17 @@ const AllProducts = () => {
     const [loading, setLoading] = useState(false);
 
     const fetchProducts = async (filter = null) => {
-        const url = filter ? `/products?filter=${filter}` : `/products`;
+    const url = filter ? `/getproducts?filter=${filter}` : `/getproducts`;
 
         setLoading(true); // Show loader
 
         try {
-            const res = await axios.get(url);
+            const res = await axios.get(url, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        });
 
             // ⏳ Simulate 3-second delay before updating UI
             setTimeout(() => {
@@ -30,7 +35,7 @@ const AllProducts = () => {
     useEffect(() => {
         fetchProducts();
     }, []);
-    
+
     return (
         <div className={[styles.allProducts, 'container-fluid'].join(' ')}>
             <div className={styles.allProductsHeader}>
