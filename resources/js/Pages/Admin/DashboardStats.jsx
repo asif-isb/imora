@@ -5,10 +5,21 @@ import {
   PieChart, Pie, Cell, Legend
 } from "recharts";
 
+// Same hues as STATUS_STYLES (yellow, blue, green, red), keyed by status name
+const STATUS_COLORS = {
+  pending: "#eab308",    // yellow
+  dispatched: "#3b82f6", // blue
+  completed: "#22c55e",  // green
+  canceled: "#ef4444",   // red
+  cancelled: "#ef4444",  // alternate spelling, same red
+};
+
+const FALLBACK_COLOR = "#9ca3af"; // gray for any unknown status
+
+const getStatusColor = (status) =>
+  STATUS_COLORS[String(status ?? "").trim().toLowerCase()] || FALLBACK_COLOR;
+
 export default function DashboardStats({ ordersData, productSales }) {
-
-    const COLORS = [ "#ffa500", "#ef4444", "#0000FF", "#22c55e"];
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
       {/* Pie Chart */}
@@ -26,7 +37,10 @@ export default function DashboardStats({ ordersData, productSales }) {
               label
             >
               {ordersData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={getStatusColor(entry.order_status)}
+                />
               ))}
             </Pie>
             <Tooltip />
@@ -61,4 +75,3 @@ export default function DashboardStats({ ordersData, productSales }) {
 
   );
 }
-

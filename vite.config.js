@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/css/web.css',
                 'resources/js/app.jsx',
             ],
+            ssr: 'resources/js/ssr.jsx',
             refresh: true,
             detectTls: 'imora-dev.test',
         }),
@@ -21,4 +22,7 @@ export default defineConfig({
           '@': '/resources/', // Ensure this alias points to the correct directory
         },
       },
+      ssr: {
+            noExternal: true, // bundle all packages into bootstrap/ssr/ssr.js
+        },
 });

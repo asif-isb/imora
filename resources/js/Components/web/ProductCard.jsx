@@ -3,6 +3,7 @@ import { Button, Modal } from 'react-bootstrap';
 import { useCart } from "@/js/Context/CartContext";
 import CartItems from '@/js/Components/CartItems';
 import { Link } from '@inertiajs/react';
+import stripHtml from "@/js/utils/stripHtml";
 
 const ProductCard = ({ product, showDiscount, cartVariant }) => {
     const { dispatch } = useCart();
@@ -17,10 +18,7 @@ const ProductCard = ({ product, showDiscount, cartVariant }) => {
 
     const displayPrice = discount ? price - (price * discount) / 100 : price;
 
-    const plainDescription =
-        new DOMParser()
-            .parseFromString(product.description || "", "text/html")
-            .body.textContent?.trim() || "";
+    const plainDescription = stripHtml(product.description);
 
     const productUrl = `/${product.category?.slug}/${product.slug}`;
 
@@ -57,17 +55,15 @@ const ProductCard = ({ product, showDiscount, cartVariant }) => {
                 )}
 
                 {/* Image */}
-                <Link
-                    href={productUrl}
-                    className="pc-img-wrap"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
+                <Link href={productUrl} className="pc-img-wrap">
                     <img
                         src={`${product.image}`}
-                        alt={product.name}
+                        alt={`${product.name}${product.category?.name ? ` - ${product.category.name}` : ''}`}
                         className="pc-img"
+                        width="400"
+                        height="400"
                         loading="lazy"
+                        decoding="async"
                     />
                 </Link>
 
@@ -77,12 +73,7 @@ const ProductCard = ({ product, showDiscount, cartVariant }) => {
                         <span className="pc-category">{product.category.name}</span>
                     )}
 
-                    <Link
-                        href={productUrl}
-                        className="pc-link"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
+                    <Link href={productUrl} className="pc-link">
                         <h3 className="pc-title">{product.name}</h3>
                         {plainDescription && (
                             <p className="pc-desc">{plainDescription}</p>

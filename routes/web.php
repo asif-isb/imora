@@ -24,6 +24,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SitemapController;
 
 /*Route::get('/test-email', function () {
     $data = [
@@ -46,7 +47,7 @@ Route::get('/', function () {
     ]);
 });
 
-
+Route::get('/sitemap.xml', [SitemapController::class, 'index']);
 
 
 /**************** Admin Routes ******************* */
@@ -138,9 +139,6 @@ Route::get('/api/deals/latest', [App\Http\Controllers\ProductController::class, 
 //Route::get('/products', [App\Http\Controllers\ProductController::class, 'products']);
 Route::get('/getproducts', [App\Http\Controllers\ProductController::class, 'products']);
 
-Route::get('/projects', function () {
-    return Inertia::render('ProjectsPage');
-});
 
 Route::get('/products-list', function () {
     return Inertia::render('AllProductsPage');

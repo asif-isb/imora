@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from "react";
-import { Carousel } from "bootstrap";
+//import { Carousel } from "bootstrap";
 
 export default function CarouselComponent({ slides = [] }) {
     const carouselRef = useRef(null);
 
-    useEffect(() => {
+    {/*useEffect(() => {
         if (!carouselRef.current || slides.length < 2) return;
 
         const carousel = new Carousel(carouselRef.current, {
@@ -15,6 +15,29 @@ export default function CarouselComponent({ slides = [] }) {
         });
 
         return () => carousel.dispose();
+    }, [slides.length]);*/}
+
+    useEffect(() => {
+        if (!carouselRef.current || slides.length < 2) return;
+
+        let carousel;
+        let cancelled = false;
+
+        import("bootstrap").then(({ Carousel }) => {
+            if (cancelled || !carouselRef.current) return;
+
+            carousel = new Carousel(carouselRef.current, {
+                ride: "carousel",
+                interval: 4000, // milliseconds between slides
+                pause: false,   // keep scrolling on mouse hover; use "hover" to pause
+                wrap: true,
+            });
+        });
+
+        return () => {
+            cancelled = true;
+            carousel?.dispose();
+        };
     }, [slides.length]);
 
     return (

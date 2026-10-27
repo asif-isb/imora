@@ -1,8 +1,8 @@
-import { useReducer, useEffect } from "react";
+import { useReducer, useEffect, useState } from "react";
 import CartContext from "@/js/Context/CartContext";
 
 const initialState = {
-    items: localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : [],
+    items: [],
     total: 0,
     itemCount: 0
 };
@@ -64,6 +64,9 @@ const cartReducer = (state, action) => {
                 itemCount: 0
             };
 
+        case "LOAD_CART":
+            return calculateCartState(action.payload);
+
         case "INITIALIZE_TOTALS":
             const { total, itemCount } = calculateTotals(state.items);
             return { ...state, total, itemCount };
@@ -87,15 +90,29 @@ const calculateCartState = (items) => {
 
 const CartProvider = ({ children }) => {
     const [cartState, dispatch] = useReducer(cartReducer, initialState);
+    const [loaded, setLoaded] = useState(false);
 
+    // Load the saved cart in the browser only (localStorage doesn't exist during SSR)
     useEffect(() => {
-        // Initialize totals when component mounts
-        dispatch({ type: "INITIALIZE_TOTALS" });
+        try {
+            const saved = localStorage.getItem('cart');
+            const items = saved ? JSON.parse(saved) : [];
+            if (Array.isArray(items) && items.length > 0) {
+                dispatch({ type: "LOAD_CART", payload: items });
+            }
+        } catch (e) {
+            // ignore corrupted or unavailable storage
+        }
+        setLoaded(true);
     }, []);
 
+    // Save only after the initial load, otherwise the empty cart would overwrite the saved one
     useEffect(() => {
-        localStorage.setItem('cart', JSON.stringify(cartState.items));
-    }, [cartState.items]);
+        if (!loaded) return;
+        try {
+            localStorage.setItem('cart', JSON.stringify(cartState.items));
+        } catch (e) {}
+    }, [cartState.items, loaded]);
 
     const contextValue = {
         items: cartState.items,

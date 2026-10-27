@@ -1,5 +1,6 @@
 import React from "react";
 import CarouselComponent from "@/js/Components/Carousel/CarouselComponent";
+import stripHtml from "@/js/utils/stripHtml";
 
 export default function TwoColumnLayout({ slides, topDiscountedProducts }) {
     return (
@@ -16,10 +17,7 @@ export default function TwoColumnLayout({ slides, topDiscountedProducts }) {
                         const discount = Number(product.discount) || 0;
                         const price = Number(product.price) || 0;
                         const finalPrice = price - (price * discount) / 100;
-                        const description =
-                            new DOMParser()
-                                .parseFromString(product.description || "", "text/html")
-                                .body.textContent?.substring(0, 80) || "";
+                        const description = stripHtml(product.description).substring(0, 80);
 
                         return (
                             <a

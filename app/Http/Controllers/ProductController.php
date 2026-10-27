@@ -163,16 +163,55 @@ class ProductController extends Controller
     public function show($category, $product)
     {
         $product = Product::with('category')
-            ->where('slug', $product)
-            ->whereHas('category', function ($q) use ($category) {
-                $q->where('slug', $category);
-            })->firstOrFail();
-        
+        ->where('slug', $product)
+        ->whereHas('category', function ($q) use ($category) {
+        $q->where('slug', $category);
+        })
+        ->firstOrFail();
+
+
+        $siteName = 'Imora';
+
+        $productName = $product->name;
+
+        $categoryName = $product->category->name ?? 'Fragrances';
+
+        $seoTitle = "{$productName} | {$categoryName} | {$siteName}";
+
+        $seoDescription = \Illuminate\Support\Str::limit(
+            trim(strip_tags($product->description ?? '')),
+            155,
+            ''
+        );
+
+        if (empty($seoDescription)) {
+            $seoDescription = "Discover {$productName} at Imora. Explore this fragrance and find your signature scent.";
+        }
+
+        $productUrl = url("/{$category}/{$product->slug}");
+
+        $productImage = $product->image
+            ? (str_starts_with($product->image, 'http')
+                ? $product->image
+                : asset(ltrim($product->image, '/')))
+            : asset('images/imora-social.jpg');
 
         return Inertia::render('Product/Show', [
             'product' => $product,
+
+            'seo' => [
+                'title' => $seoTitle,
+                'description' => $seoDescription,
+                'canonical' => $productUrl,
+                'image' => $productImage,
+                'siteName' => $siteName,
+                'type' => 'product',
+            ],
         ]);
+
+
     }
+
 
     public function products(Request $request)
     {

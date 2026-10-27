@@ -1,0 +1,90 @@
+import { K, r as reactExports, j as jsxRuntimeExports, S as Sr } from "../ssr.js";
+import Dashboard from "./Dashboard-BJGg0EZV.js";
+import "util";
+import "stream";
+import "path";
+import "http";
+import "https";
+import "url";
+import "fs";
+import "crypto";
+import "assert";
+import "tty";
+import "os";
+import "zlib";
+import "events";
+import "process";
+import "async_hooks";
+import "./AuthenticatedLayout-DP8axALD.js";
+import "./ApplicationLogo-B-UT6Pkc.js";
+import "./transition-Do-OiQ4t.js";
+import "./AdminSidebar-B2DLZYli.js";
+function MenuCreate() {
+  const { menus } = K().props;
+  const [form, setForm] = reactExports.useState({
+    title: "",
+    link: "",
+    parent_id: "",
+    order: 0
+  });
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    Sr.post(route("menu.store"), form);
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Dashboard, { title: "Add Menu", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handleSubmit, className: "space-y-4 max-w-md", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Menu Title" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          className: "w-full border rounded px-2 py-1",
+          value: form.title,
+          onChange: (e) => setForm((f) => ({ ...f, title: e.target.value })),
+          required: true
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Link (for submenus)" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          className: "w-full border rounded px-2 py-1",
+          value: form.link,
+          onChange: (e) => setForm((f) => ({ ...f, link: e.target.value }))
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Parent Menu (for submenus)" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+        "select",
+        {
+          className: "w-full border rounded px-2 py-1",
+          value: form.parent_id,
+          onChange: (e) => setForm((f) => ({ ...f, parent_id: e.target.value })),
+          children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: "", children: "None (Main Menu)" }),
+            menus.map((menu) => /* @__PURE__ */ jsxRuntimeExports.jsx("option", { value: menu.id, children: menu.title }, menu.id))
+          ]
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("label", { children: "Order" }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "number",
+          className: "w-full border rounded px-2 py-1",
+          value: form.order,
+          onChange: (e) => setForm((f) => ({ ...f, order: e.target.value }))
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("button", { className: "bg-blue-600 text-white px-4 py-2 rounded", type: "submit", children: "Add Menu" })
+  ] }) });
+}
+export {
+  MenuCreate as default
+};
