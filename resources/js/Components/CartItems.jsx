@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMobileAlt, faUniversity, faCopy } from '@fortawesome/free-solid-svg-icons';
 import { useCart } from '@/js/Context/CartContext';
 import styles from '@/css/web/CartItems.module.css';
-
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import Swal from 'sweetalert2';
@@ -164,6 +164,7 @@ const CartItems = ({ onClose = () => {} }) => {
         top: 0,
         right: showCheckout ? 0 : '-100%',
         width: '400px',
+        maxWidth: '100vw',
         height: '100vh',
         background: 'white',
         transition: 'right 0.3s ease-in-out',
@@ -180,7 +181,14 @@ const CartItems = ({ onClose = () => {} }) => {
         );
     }
 
-
+    const totalQty = items.reduce((n, i) => n + i.quantity, 0);
+    const savings = items.reduce((sum, i) => {
+        const original = Number(i.originalPrice) || 0;
+        const unit = Number(i.price) || 0;
+        return Number(i.discount) > 0 && original > unit
+            ? sum + (original - unit) * i.quantity
+            : sum;
+    }, 0);
 
 
     return (
@@ -203,87 +211,315 @@ const CartItems = ({ onClose = () => {} }) => {
                     </div>
                 </div>
             )}
-            <div className={styles.cartItemsContainer}>
-                <div className={styles.cartItems}>
+                        <div className={styles.cartItemsContainer}>
+                <div className={`${styles.cartItems} ci-list`}>
+                    {items.map((item) => {
+                        const unit = Number(item.price) || 0;
+                        const original = Number(item.originalPrice) || 0;
+                        const hasDiscount = Number(item.discount) > 0 && original > unit;
 
-                    {items.map((item) => (
-                        <div key={item.id} className="cart-item d-flex align-items-center p-3 border-bottom">
-                            <img
-                                src={`${item.image}`}
-                                alt={item.name}
-                                className="cart-item-image me-3 rounded-circle"
-                                style={{ width: '80px', height: '80px', objectFit: 'cover' }}
-                            />
-                            <div className="flex-grow-1">
-                                <h5 className="mb-1">{item.name}</h5>
-                                <div className="d-flex justify-content-between align-items-center">
-                                    <div className="quantity-controls d-flex align-items-center">
-                                        <Button
-                                            variant="outline-secondary"
-                                            size="sm"
-                                            onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                        return (
+                            <div key={item.id} className="ci-item">
+                                <img
+                                    src={`${item.image}`}
+                                    alt={item.name}
+                                    width="80"
+                                    height="80"
+                                    loading="lazy"
+                                    className="ci-img"
+                                />
+
+                                <div className="ci-body">
+                                    <div className="ci-top">
+                                        <h3 className="ci-name">{item.name}</h3>
+                                        <button
+                                            type="button"
+                                            className="ci-remove"
+                                            aria-label={`Remove ${item.name} from cart`}
+                                            onClick={() => dispatch({ type: "REMOVE_FROM_CART", payload: item.id })}
                                         >
-                                            -
-                                        </Button>
-                                        <span className="mx-2">{item.quantity}</span>
-                                        <Button
-                                            variant="outline-secondary"
-                                            size="sm"
-                                            onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                                        >
-                                            +
-                                        </Button>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                                <polyline points="3 6 5 6 21 6" />
+                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                                <path d="M10 11v6M14 11v6" />
+                                                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                                            </svg>
+                                        </button>
                                     </div>
-                                    <div className="price-section">
-                                        {item.discount > 0 && (
-                                            <span className="text-decoration-line-through text-muted">
-                                                Rs {(item.originalPrice * item.quantity).toFixed(2)}/-
-                                            </span>
-                                        )}
-                                        <br />
-                                        <span className="fw-bold">Rs {(item.price * item.quantity).toFixed(2)}/-</span>
+
+                                    <div className="ci-unit">Rs {unit.toFixed(2)} each</div>
+
+                                    <div className="ci-bottom">
+                                        <div className="ci-qty" role="group" aria-label={`Quantity for ${item.name}`}>
+                                            <button
+                                                type="button"
+                                                aria-label="Decrease quantity"
+                                                onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                                            >
+                                                −
+                                            </button>
+                                            <span aria-live="polite">{item.quantity}</span>
+                                            <button
+                                                type="button"
+                                                aria-label="Increase quantity"
+                                                onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+
+                                        <div className="ci-price">
+                                            {hasDiscount && (
+                                                <del>Rs {(original * item.quantity).toFixed(2)}/-</del>
+                                            )}
+                                            <strong>Rs {(unit * item.quantity).toFixed(2)}/-</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <Button
-                                variant="danger"
-                                size="sm"
-                                className="ms-3"
-                                onClick={() => dispatch({ type: "REMOVE_FROM_CART", payload: item.id })}
-                            >
-                                ×
-                            </Button>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
-                <div className={styles.cartSummary}>
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                        <h4 className="mb-0">Total:</h4>
-                        <h4 className="mb-0">Rs {total.toFixed(2)}/-</h4>
+                <div className={`${styles.cartSummary} ci-summary`}>
+                    {savings > 0 && (
+                        <>
+                            <div className="ci-row">
+                                <span>Subtotal ({totalQty} {totalQty === 1 ? 'item' : 'items'})</span>
+                                <span>Rs {(total + savings).toFixed(2)}/-</span>
+                            </div>
+                            <div className="ci-row ci-saving">
+                                <span>You save</span>
+                                <span>− Rs {savings.toFixed(2)}/-</span>
+                            </div>
+                        </>
+                    )}
+                    <div className="ci-row ci-total">
+                        <span>Total</span>
+                        <span>Rs {total.toFixed(2)}/-</span>
                     </div>
-                    <div className="d-flex gap-2">
-                        <Button
-                            variant="outline-secondary"
-                            className="w-50"
-                            onClick={() => dispatch({ type: "CLEAR_CART" })}
-                        >
-                            Clear Cart
-                        </Button>
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            className="w-50"
-                            onClick={handleCheckout}
-                        >
-                            Checkout
-                        </Button>
-                    </div>
+
+                    <button type="button" className="ci-checkout" onClick={handleCheckout}>
+                        Checkout
+                    </button>
+                    <button
+                        type="button"
+                        className="ci-clear"
+                        onClick={() => dispatch({ type: "CLEAR_CART" })}
+                    >
+                        Clear cart
+                    </button>
                 </div>
+
+                <style>{`
+                    .ci-list {
+                        padding: 0.75rem;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 0.75rem;
+                    }
+
+                    .ci-item {
+                        display: flex;
+                        gap: 0.8rem;
+                        padding: 0.7rem;
+                        background: #fff;
+                        border: 1px solid #eee;
+                        border-radius: 14px;
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+                    }
+
+                    .ci-img {
+                        width: 80px;
+                        height: 80px;
+                        flex-shrink: 0;
+                        object-fit: cover;
+                        border-radius: 12px;
+                        background: #f6f6f6;
+                    }
+
+                    .ci-body {
+                        flex: 1;
+                        min-width: 0;
+                        display: flex;
+                        flex-direction: column;
+                    }
+
+                    .ci-top {
+                        display: flex;
+                        align-items: flex-start;
+                        justify-content: space-between;
+                        gap: 0.5rem;
+                    }
+
+                    .ci-name {
+                        margin: 0;
+                        font-size: 0.95rem;
+                        font-weight: 700;
+                        line-height: 1.3;
+                        color: #1b1919;
+                        display: -webkit-box;
+                        -webkit-line-clamp: 2;
+                        -webkit-box-orient: vertical;
+                        overflow: hidden;
+                    }
+
+                    .ci-remove {
+                        flex-shrink: 0;
+                        width: 30px;
+                        height: 30px;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: none;
+                        background: transparent;
+                        color: #999;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        transition: background-color 0.2s ease, color 0.2s ease;
+                    }
+                    .ci-remove:hover,
+                    .ci-remove:focus-visible {
+                        background: #fdecea;
+                        color: #d93025;
+                    }
+
+                    .ci-unit {
+                        font-size: 0.78rem;
+                        color: #8a8a8a;
+                        margin: 0.1rem 0 0.5rem;
+                    }
+
+                    .ci-bottom {
+                        margin-top: auto;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        gap: 0.5rem;
+                    }
+
+                    .ci-qty {
+                        display: inline-flex;
+                        align-items: center;
+                        background: #f5f5f5;
+                        border-radius: 50px;
+                        padding: 2px;
+                    }
+                    .ci-qty button {
+                        width: 32px;
+                        height: 32px;
+                        border: none;
+                        border-radius: 50%;
+                        background: #fff;
+                        color: #1b1919;
+                        font-size: 1.1rem;
+                        line-height: 1;
+                        cursor: pointer;
+                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+                        transition: background-color 0.2s ease, color 0.2s ease;
+                    }
+                    .ci-qty button:hover,
+                    .ci-qty button:focus-visible {
+                        background: #c29522;
+                        color: #fff;
+                    }
+                    .ci-qty span {
+                        min-width: 30px;
+                        text-align: center;
+                        font-weight: 700;
+                        font-size: 0.9rem;
+                    }
+
+                    .ci-price {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-end;
+                        line-height: 1.25;
+                    }
+                    .ci-price del {
+                        font-size: 0.75rem;
+                        color: #999;
+                    }
+                    .ci-price strong {
+                        font-size: 0.98rem;
+                        color: #9b5d24;
+                    }
+
+                    /* Summary */
+                    .ci-summary {
+                        padding: 1rem;
+                        background: #fff;
+                        border-top: 1px solid #eee;
+                        box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.06);
+                    }
+                    .ci-row {
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 0.9rem;
+                        color: #555;
+                        margin-bottom: 0.4rem;
+                    }
+                    .ci-saving {
+                        color: #1e8e3e;
+                        font-weight: 600;
+                    }
+                    .ci-total {
+                        font-size: 1.15rem;
+                        font-weight: 700;
+                        color: #1b1919;
+                        padding-top: 0.6rem;
+                        margin: 0.4rem 0 0.9rem;
+                        border-top: 1px dashed #ddd;
+                    }
+
+                    .ci-checkout {
+                        width: 100%;
+                        border: 2px solid #c29522;
+                        background: #c29522;
+                        color: #fff;
+                        font-weight: 700;
+                        font-size: 0.95rem;
+                        letter-spacing: 0.05em;
+                        text-transform: uppercase;
+                        padding: 0.8rem 1rem;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+                    }
+                    .ci-checkout:hover,
+                    .ci-checkout:focus-visible {
+                        background: #9b5d24;
+                        border-color: #9b5d24;
+                    }
+                    .ci-checkout:active {
+                        transform: scale(0.98);
+                    }
+
+                    .ci-clear {
+                        display: block;
+                        width: 100%;
+                        margin-top: 0.6rem;
+                        border: none;
+                        background: transparent;
+                        color: #8a8a8a;
+                        font-size: 0.85rem;
+                        padding: 0.4rem;
+                        cursor: pointer;
+                    }
+                    .ci-clear:hover {
+                        color: #d93025;
+                        text-decoration: underline;
+                    }
+
+                    @media (max-width: 400px) {
+                        .ci-img { width: 68px; height: 68px; }
+                        .ci-name { font-size: 0.9rem; }
+                    }
+                `}</style>
             </div>
 
             {/* Separate Checkout Drawer */}
-            {showCheckout && (
+            {showCheckout && typeof document !== 'undefined' && createPortal(
                 <>
                     <div
                         className="backdrop"
@@ -497,7 +733,8 @@ const CartItems = ({ onClose = () => {} }) => {
                             </Form>
                         </div>
                     </div>
-                </>
+                </>,
+                document.body
             )}
         </>
     );

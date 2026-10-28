@@ -264,7 +264,7 @@
     transform: scale(1.1);
 }
 
-.cart-drawer {
+/*.cart-drawer {
     position: fixed;
     top: 0;
     right: -100%;
@@ -278,6 +278,28 @@
 
 .cart-drawer.show {
     right: 0;
+}*/
+
+.cart-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 400px;
+    max-width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    background: white;
+    transform: translateX(100%);
+    visibility: hidden;
+    box-shadow: none;
+    transition: transform 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    z-index: 1100;
+}
+
+.cart-drawer.show {
+    transform: translateX(0);
+    visibility: visible;
+    box-shadow: -2px 0 8px rgba(0,0,0,0.15);
 }
 
 .cart-drawer-backdrop {

@@ -216,26 +216,26 @@ class ProductController extends Controller
     public function products(Request $request)
     {
 
-    $filter = $request->query('filter');
+        $filter = $request->query('filter');
 
-    $query = Product::with('category');
+        $query = Product::with('category');
 
-    switch ($filter) {
-        case 'new':
-            $query->orderBy('created_at', 'desc');
-            break;
-        case 'best':
-            $query->where('is_best_seller', true);
-            break;
-        case 'popular':
-            $query->where('is_popular', true);
-            break;
-        default:
-            $query->inRandomOrder();
-            break;
-    }
+        switch ($filter) {
+            case 'new':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'best':
+                $query->where('is_best_seller', true);
+                break;
+            case 'popular':
+                $query->where('is_popular', true);
+                break;
+            default:
+                $query->inRandomOrder();
+                break;
+        }
 
-    return response()->json($query->limit(6)->get());
+        return response()->json($query->limit(6)->get());
     }
 
 
